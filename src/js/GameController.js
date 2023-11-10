@@ -6,6 +6,7 @@ import Daemon from './characters/Daemon';
 import Undead from './characters/Undead';
 import Vampire from './characters/Vampire';
 import PositionedCharacter from './PositionedCharacter';
+import { determiningPositionsTeams } from './utils';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -16,51 +17,24 @@ export default class GameController {
   init() {
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
+
+    this.gamePlay.boardSize = 10;  // ***!!!!!*** убрать в конце
     this.gamePlay.drawUi('prairie');
+    const div = document.querySelector('.board'); // ***!!!!!*** убрать в конце
+    div.style.gridTemplateColumns = 'repeat(10, 1fr)'; // ***!!!!!*** убрать в конце
 
     const count = 8;
+    const positionIndexes = determiningPositionsTeams(this.gamePlay.boardSize);
 
     const playerTypes = [Bowman, Swordsman, Magician]; 
     const teamPlayer = generateTeam(playerTypes, 4, count);
-    console.log(teamPlayer.characters);
 
     const evilTypes = [Daemon, Undead, Vampire];
     const teamEnemy = generateTeam(evilTypes, 4, count);
-    console.log(teamEnemy.characters);
 
-    const listIndex = {
-      player: [],
-      enemy: [],
-    };
-
-    for (let i = 0; i < this.gamePlay.boardSize ** 2; i++) {
-      const step = this.gamePlay.boardSize - 1;
-      if (Number.isInteger(i / this.gamePlay.boardSize)) {
-        listIndex.player.push(i);
-        listIndex.player.push(i + 1);
-        listIndex.enemy.push(i + step - 1);
-        listIndex.enemy.push(i + step);
-      }
-    }
-
-    const positionedCharacter = [];
-    for (let i = 0; i < count; i++) {
-      const player = teamPlayer.characters[i];
-      let index = Math.floor(Math.random() * listIndex.player.length);
-      let position = listIndex.player[index];
-      listIndex.player.splice(index, 1);
-      const positionPlayer = new PositionedCharacter(player, position)
-      positionedCharacter.push(positionPlayer);
-
-      const enemy = teamEnemy.characters[i];
-      index = Math.floor(Math.random() * listIndex.enemy.length);
-      position = listIndex.enemy[index];
-      listIndex.enemy.splice(index, 1);
-      const positionEnemy = new PositionedCharacter(enemy, position);
-      positionedCharacter.push(positionEnemy);
-    }
-
-    this.gamePlay.redrawPositions(positionedCharacter);
+    const players = this.determiningPositionsCharacters(teamPlayer, positionIndexes.player);
+    const enemies = this.determiningPositionsCharacters(teamEnemy, positionIndexes.enemy);
+    this.gamePlay.redrawPositions([...players, ...enemies]);
   }
 
   onCellClick(index) {
@@ -73,5 +47,18 @@ export default class GameController {
 
   onCellLeave(index) {
     // TODO: react to mouse leave
+  }
+
+  determiningPositionsCharacters(object, listIndex) {
+    const result = [];
+    for (let i = 0; i < object.characters.length; i++) {
+      const player = object.characters[i];
+      const index = Math.floor(Math.random() * listIndex.length);
+      const position = listIndex[index];
+      listIndex.splice(index, 1);
+      const positionPlayer = new PositionedCharacter(player, position)
+      result.push(positionPlayer);
+    }
+    return result;
   }
 }

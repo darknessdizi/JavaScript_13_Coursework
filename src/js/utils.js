@@ -83,3 +83,22 @@ export function calcHealthLevel(health) {
 
   return 'high';
 }
+
+export function determiningPositionsTeams(boardSize) {
+  const positionIndex = {
+    player: [],
+    enemy: [],
+  };
+  const step = boardSize - 1;
+  const border = (boardSize ** 2) - step;
+
+  for (let i = 0; i < border; i++) {
+    if (Number.isInteger(i / boardSize)) {
+      positionIndex.player.push(i);
+      positionIndex.player.push(i + 1);
+      positionIndex.enemy.push(i + step - 1);
+      positionIndex.enemy.push(i + step);
+    }
+  }
+  return positionIndex;
+}

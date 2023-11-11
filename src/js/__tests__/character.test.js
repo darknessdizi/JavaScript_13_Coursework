@@ -8,7 +8,8 @@ import Vampire from '../characters/Vampire';
 
 test('Проверка создания класса Character', () => {
   expect(() => {
-    new Character(2);
+    const obj = new Character(2);
+    expect(obj).toBeUndefined();
   }).toThrow('Нельзя использовать вызов new Character()');
 });
 
@@ -17,73 +18,73 @@ const listClass = [
     'Bowman',
     Bowman,
     {
-      "attack": 25,
-      "defence": 25,
-      "health": 50,
-      "level": 1,
-      "type": "bowman",
-    }
+      attack: 25,
+      defence: 25,
+      health: 50,
+      level: 1,
+      type: 'bowman',
+    },
   ],
   [
     'Swordsman',
     Swordsman,
     {
-      "attack": 40,
-      "defence": 10,
-      "health": 50,
-      "level": 1,
-      "type": "swordsman",
-    }
+      attack: 40,
+      defence: 10,
+      health: 50,
+      level: 1,
+      type: 'swordsman',
+    },
   ],
   [
     'Magician',
     Magician,
     {
-      "attack": 10,
-      "defence": 40,
-      "health": 50,
-      "level": 1,
-      "type": "magician",
-    }
+      attack: 10,
+      defence: 40,
+      health: 50,
+      level: 1,
+      type: 'magician',
+    },
   ],
   [
     'Daemon',
     Daemon,
     {
-      "attack": 10,
-      "defence": 40,
-      "health": 50,
-      "level": 1,
-      "type": "daemon",
-    }
+      attack: 10,
+      defence: 40,
+      health: 50,
+      level: 1,
+      type: 'daemon',
+    },
   ],
   [
     'Undead',
     Undead,
     {
-      "attack": 40,
-      "defence": 10,
-      "health": 50,
-      "level": 1,
-      "type": "undead",
-    }
+      attack: 40,
+      defence: 10,
+      health: 50,
+      level: 1,
+      type: 'undead',
+    },
   ],
   [
     'Vampire',
     Vampire,
     {
-      "attack": 25,
-      "defence": 25,
-      "health": 50,
-      "level": 1,
-      "type": "vampire",
-    }
+      attack: 25,
+      defence: 25,
+      health: 50,
+      level: 1,
+      type: 'vampire',
+    },
   ],
 ];
 const testClass = test.each(listClass);
 
-testClass('Создание класса %s - дочерний от Character', (title, object, result) => {
-  const unit = new object(1);
-  expect(unit).toBeInstanceOf(object);
+testClass('Создание класса %s - дочерний от Character', (title, ClassCaracter, result) => {
+  const unit = new ClassCaracter(1);
+  expect(unit).toBeInstanceOf(ClassCaracter);
   expect(unit).toEqual(result);
 });

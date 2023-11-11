@@ -11,6 +11,7 @@
       "LabeledStatement",
       "WithStatement"
     ],
-    "no-console": "off"
+    "no-console": "off",
+    "no-alert": "off"
   }
 }

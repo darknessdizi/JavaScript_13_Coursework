@@ -1,4 +1,4 @@
-import Team from "./Team";
+import Team from './Team';
 
 /**
  * Формирует экземпляр персонажа из массива allowedTypes со
@@ -24,14 +24,14 @@ export function* characterGenerator(allowedTypes, maxLevel) {
  * @param allowedTypes массив классов
  * @param maxLevel максимальный возможный уровень персонажа
  * @param characterCount количество персонажей, которое нужно сформировать
- * @returns экземпляр Team, хранящий экземпляры персонажей. 
+ * @returns экземпляр Team, хранящий экземпляры персонажей.
  * Количество персонажей в команде - characterCount
  * */
 export function generateTeam(allowedTypes, maxLevel, characterCount) {
   // TODO: write logic here
   const playerGenerator = characterGenerator(allowedTypes, maxLevel);
   const list = [];
-  for (let i = 0; i < characterCount; i++) {
+  for (let i = 0; i < characterCount; i += 1) {
     list.push(playerGenerator.next().value);
   }
   return new Team(list);

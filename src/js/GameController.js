@@ -6,7 +6,7 @@ import Daemon from './characters/Daemon';
 import Undead from './characters/Undead';
 import Vampire from './characters/Vampire';
 import PositionedCharacter from './PositionedCharacter';
-import { determiningPositionsTeams } from './utils';
+import { getIndexPositions } from './utils';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -18,22 +18,22 @@ export default class GameController {
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
 
-    this.gamePlay.boardSize = 10;  // ***!!!!!*** убрать в конце
+    this.gamePlay.boardSize = 10; // ***!!!!!*** убрать в конце
     this.gamePlay.drawUi('prairie');
     const div = document.querySelector('.board'); // ***!!!!!*** убрать в конце
     div.style.gridTemplateColumns = 'repeat(10, 1fr)'; // ***!!!!!*** убрать в конце
 
     const count = 8;
-    const positionIndexes = determiningPositionsTeams(this.gamePlay.boardSize);
+    const positionIndexes = getIndexPositions(this.gamePlay.boardSize);
 
-    const playerTypes = [Bowman, Swordsman, Magician]; 
+    const playerTypes = [Bowman, Swordsman, Magician];
     const teamPlayer = generateTeam(playerTypes, 4, count);
 
     const evilTypes = [Daemon, Undead, Vampire];
     const teamEnemy = generateTeam(evilTypes, 4, count);
 
-    const players = this.determiningPositionsCharacters(teamPlayer, positionIndexes.player);
-    const enemies = this.determiningPositionsCharacters(teamEnemy, positionIndexes.enemy);
+    const players = this.assignPositionsCharacters(teamPlayer, positionIndexes.player);
+    const enemies = this.assignPositionsCharacters(teamEnemy, positionIndexes.enemy);
     this.gamePlay.redrawPositions([...players, ...enemies]);
   }
 
@@ -49,14 +49,14 @@ export default class GameController {
     // TODO: react to mouse leave
   }
 
-  determiningPositionsCharacters(object, listIndex) {
+  static assignPositionsCharacters(object, listIndex) {
     const result = [];
-    for (let i = 0; i < object.characters.length; i++) {
+    for (let i = 0; i < object.characters.length; i += 1) {
       const player = object.characters[i];
       const index = Math.floor(Math.random() * listIndex.length);
       const position = listIndex[index];
       listIndex.splice(index, 1);
-      const positionPlayer = new PositionedCharacter(player, position)
+      const positionPlayer = new PositionedCharacter(player, position);
       result.push(positionPlayer);
     }
     return result;

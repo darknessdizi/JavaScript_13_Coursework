@@ -19,7 +19,7 @@ export default class Character {
     this.defence = 0;
     this.health = 50;
     this.type = type;
-    // TODO: выбросите исключение, если кто-то использует "new Character()" Character.prototype.constructor.name
+
     if (new.target === Character.prototype.constructor) {
       throw new Error('Нельзя использовать вызов new Character()');
     }

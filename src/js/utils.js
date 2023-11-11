@@ -84,7 +84,7 @@ export function calcHealthLevel(health) {
   return 'high';
 }
 
-export function determiningPositionsTeams(boardSize) {
+export function getIndexPositions(boardSize) {
   const positionIndex = {
     player: [],
     enemy: [],
@@ -92,7 +92,7 @@ export function determiningPositionsTeams(boardSize) {
   const step = boardSize - 1;
   const border = (boardSize ** 2) - step;
 
-  for (let i = 0; i < border; i++) {
+  for (let i = 0; i < border; i += 1) {
     if (Number.isInteger(i / boardSize)) {
       positionIndex.player.push(i);
       positionIndex.player.push(i + 1);

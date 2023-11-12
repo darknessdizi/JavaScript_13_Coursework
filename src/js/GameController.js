@@ -32,9 +32,19 @@ export default class GameController {
     const evilTypes = [Daemon, Undead, Vampire];
     const teamEnemy = generateTeam(evilTypes, 4, count);
 
-    const players = this.assignPositionsCharacters(teamPlayer, positionIndexes.player);
-    const enemies = this.assignPositionsCharacters(teamEnemy, positionIndexes.enemy);
+    const players = GameController.assignPositionsCharacters(teamPlayer, positionIndexes.player);
+    const enemies = GameController.assignPositionsCharacters(teamEnemy, positionIndexes.enemy);
     this.gamePlay.redrawPositions([...players, ...enemies]);
+
+    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+
+    const obj = {
+      players,
+      enemies,
+    };
+    this.stateService.save(obj);
   }
 
   onCellClick(index) {
@@ -43,10 +53,18 @@ export default class GameController {
 
   onCellEnter(index) {
     // TODO: react to mouse enter
+    const gameState = this.stateService.load();
+    const arrayTeams = [...gameState.players, ...gameState.enemies];
+    const unit = arrayTeams.find((item) => item.position === index);
+    if (unit) {
+      const message = GameController.getMessage(unit);
+      this.gamePlay.showCellTooltip(message, index);
+    }
   }
 
   onCellLeave(index) {
     // TODO: react to mouse leave
+    // this.gamePlay.hideCellTooltip(index);
   }
 
   static assignPositionsCharacters(object, listIndex) {
@@ -60,5 +78,13 @@ export default class GameController {
       result.push(positionPlayer);
     }
     return result;
+  }
+
+  static getMessage(unit) {
+    const { level } = unit.character;
+    const { attack } = unit.character;
+    const { defence } = unit.character;
+    const { health } = unit.character;
+    return `\u{1F396} ${level} \u{2694} ${attack} \u{1F6E1} ${defence} \u{2764} ${health}`;
   }
 }

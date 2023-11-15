@@ -51,27 +51,6 @@ export function calcTileType(index, boardSize) {
   return 'center';
 }
 
-// export function calcTileType(index, boardSize) {
-//   // TODO: вариант 2 (меньше, но не красивый)
-//   const board = {
-//     'top-left': index === 0,
-//     'top-right': index === boardSize - 1,
-//     'bottom-left': index === (boardSize ** 2) - boardSize,
-//     'bottom-right': index === (boardSize ** 2) - 1,
-//     'top': index + 1 < boardSize,
-//     'left': Number.isInteger(index / boardSize),
-//     'right': Number.isInteger((index + 1) / boardSize),
-//     'bottom': index > (boardSize ** 2) - boardSize,
-//     'center': true,
-//   }
-
-//   for (let param of Object.entries(board)) {
-//     if (param[1]) {
-//       return param[0];
-//     }
-//   }
-// }
-
 export function calcHealthLevel(health) {
   if (health < 15) {
     return 'critical';
@@ -101,4 +80,29 @@ export function getIndexPositions(boardSize) {
     }
   }
   return positionIndex;
+}
+
+export function getFieldMatrix(boardSize) {
+  const result = [];
+  for (let x = 0; x < boardSize; x += 1) {
+    const listIndex = [];
+    for (let y = 0; y < boardSize; y += 1) {
+      const index = (boardSize * x) + y;
+      listIndex.push(index);
+    }
+    result.push(listIndex);
+  }
+  return result;
+}
+
+export function getСoordinates(index, matrix) {
+  const result = { X: null, Y: null };
+  for (let x = 0; x < matrix.length; x += 1) {
+    result.Y = matrix[x].indexOf(index);
+    if (result.Y != -1) {
+      result.X = x;
+      break;
+    }
+  }
+  return result;
 }

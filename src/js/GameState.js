@@ -9,7 +9,7 @@ export default class GameState {
     this.unitAssign = false;
     this.point = { X: null, Y: null }
     this.matrix = undefined;
-    this.actionStatus = true;
+    this.cursorStatus = true;
     this.step = undefined;
     this.stepAttack = undefined;
   }

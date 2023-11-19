@@ -33,14 +33,29 @@ export default class GameController {
     const positionIndexes = getIndexPositions(this.gamePlay.boardSize);
 
     const playerTypes = [Bowman, Swordsman, Magician];
+    // const playerTypes = [Swordsman];
     const teamPlayer = generateTeam(playerTypes, 4, count);
 
     const evilTypes = [Daemon, Undead, Vampire];
     // const evilTypes = [Daemon, Vampire];
+    // const evilTypes = [Daemon];
     const teamEnemy = generateTeam(evilTypes, 4, count);
 
     const players = GameController.assignPositionsCharacters(teamPlayer, positionIndexes.player);
     const enemies = GameController.assignPositionsCharacters(teamEnemy, positionIndexes.enemy);
+    //// ++++++++++++++++++++++++++++++++++++
+    // players[0].position = 90;
+    // enemies[0].position = 9;
+    // players[0].position = 0;
+    // enemies[0].position = 99;
+    // players[0].position = 43;
+    // enemies[0].position = 12;
+    // players[0].position = 59;
+    // enemies[0].position = 46;
+    // players[0].position = 45;
+    // enemies[0].position = 40;
+    //// ++++++++++++++++++++++++++++++++++++
+    console.log(players)
     this.gamePlay.redrawPositions([...players, ...enemies]);
 
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
@@ -151,10 +166,6 @@ export default class GameController {
         GamePlay.showError('Нельзя выбирать игроков противника');
       }
     }
-    // if (!this.gameState.stepUser) {
-    //   console.log('Ходит противник');
-    //   this.stepComputer();
-    // } 
   }
 
   onCellEnter(index) {
@@ -276,14 +287,15 @@ export default class GameController {
     teamPlayers.forEach((item) => {
       const target = getСoordinates(item.position, this.gameState.matrix);
       console.log('target', target);
+      const targetX = Math.abs(cordsComputer.X - target.X);
+      const targetY = Math.abs(cordsComputer.Y - target.Y);
       let distance;
-      const targetX = Math.abs(cordsComputer.X - target.X) - this.gameState.stepAttack;
-      const targetY = Math.abs(cordsComputer.Y - target.Y) - this.gameState.stepAttack;
-      
-      if (targetX >= targetY) {
-        distance = targetX;
+      if (targetX <= this.gameState.stepAttack) {
+        distance = targetY - this.gameState.stepAttack;
+      } else if (targetY <= this.gameState.stepAttack) {
+        distance = targetX - this.gameState.stepAttack;
       } else {
-        distance = targetY;
+        distance = targetX - this.gameState.stepAttack + targetY - this.gameState.stepAttack;
       }
 
       metric.push(
@@ -299,7 +311,7 @@ export default class GameController {
     const cordsTarget = getСoordinates(metric[0].position, this.gameState.matrix);
     console.log('Наша цель', cordsTarget);
     console.log('Metric', metric[0]);
-    if (metric[0].distance === 0) {
+    if (metric[0].distance <= 0) {
       // await setTimeout(() => {
         this.onCellClick(this.gameState.matrix[cordsTarget.X][cordsTarget.Y]);
       // }, 1000);
@@ -308,35 +320,75 @@ export default class GameController {
 
     let x, y;
     let step;
-    if (metric[0].distance > listUnits[0].character.stepAttack) {
-      step = metric[0].distance;
+    if (metric[0].distance >= listUnits[0].character.stepAttack) {
+      if (metric[0].distance > listUnits[0].character.step) {
+        step = listUnits[0].character.step;
+      } else {
+        step = metric[0].distance;
+      }
     } else {
-      step = listUnits[0].character.stepAttack;
+      if (metric[0].distance > listUnits[0].character.step) {
+        step = listUnits[0].character.step;
+      } else {
+        step = metric[0].distance;
+      }
     }
-    if (cordsTarget.X === cordsComputer.X) {
+    console.log('Размер нашего шага компьютера', step, this.gameState.stepAttack);
+    // const targetX = Math.abs(cordsComputer.X - cordsTarget.X) - this.gameState.stepAttack;
+    // const targetY = Math.abs(cordsComputer.Y - cordsTarget.Y) - this.gameState.stepAttack; 
+    const targetX = cordsComputer.X - cordsTarget.X;
+    const targetY = cordsComputer.Y - cordsTarget.Y; 
+    console.log('targetX', targetX, 'targetY', targetY);
+    const absTargetX = Math.abs(targetX);
+    const absTargetY = Math.abs(targetY);
+    const attack = this.gameState.stepAttack;
+    if (absTargetX - attack <= 0) {
+      console.log('1 enter ******');
+      x = cordsComputer.X
       if (cordsComputer.Y > cordsTarget.Y) {
         y = cordsComputer.Y - step;
       } else {
         y = cordsComputer.Y + step;
       }
-    } else if (cordsTarget.Y === cordsComputer.Y) {
+    } else if (absTargetY - attack <= 0) {
+      console.log('2 enter ******');
+      y = cordsComputer.Y
+      if (cordsComputer.X > cordsTarget.X) {
+        x = cordsComputer.X - step;
+      } else {
+        x = cordsComputer.X + step;
+      }
+    } else if ((absTargetX - attack >= step) && (absTargetY - attack >= step)) {
+      console.log('5 enter ******');
+      if (targetX > 0) {
+        x = cordsComputer.X - step;
+      } else {
+        x = cordsComputer.X + step;
+      }
+      if (targetY > 0) {
+        y = cordsComputer.Y - step;
+      } else {
+        y = cordsComputer.Y + step;
+      }
+    } else if (absTargetX - attack >= absTargetY - attack) {
+      console.log('3 enter ******');
+      y = cordsComputer.Y
       if (cordsComputer.X > cordsTarget.X) {
         x = cordsComputer.X - step;
       } else {
         x = cordsComputer.X + step;
       }
     } else {
-      if (cordsComputer.X > cordsTarget.X) {
-        x = cordsComputer.X - step;
-      } else {
-        x = cordsComputer.X + step;
-      }
+      console.log('4 enter ******');
+      x = cordsComputer.X
       if (cordsComputer.Y > cordsTarget.Y) {
         y = cordsComputer.Y - step;
       } else {
         y = cordsComputer.Y + step;
       }
     }
+
+    
     console.log('Go to', x, y)
     // await setTimeout(() => {
       this.onCellClick(this.gameState.matrix[x][y]);
@@ -357,12 +409,3 @@ export default class GameController {
   }
 
 }
-
-// *** Комп выбрал своего ударника p {character: u, position: 36}
-// main.js:1 *** Координаты компа {X: 3, Y: 6}
-// main.js:1 Текущее состояние команд (16) [p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p]
-// main.js:1 Нажали на unit p {character: u, position: 36}
-// main.js:1 metric (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]0: {distance: -4, position: 68}1: {distance: 3, position: 41}2: {distance: 3, position: 11}3: {distance: 3, position: 31}4: {distance: 3, position: 71}5: {distance: 4, position: 40}6: {distance: 4, position: 70}7: {distance: 4, position: 80}length: 8[[Prototype]]: Array(0)
-// main.js:1 Наша цель {X: 6, Y: 8}
-// main.js:1 Metric {distance: -4, position: 68}
-// main.js:1 Go to -1 2

@@ -13,6 +13,10 @@ export default class GameState {
     this.step = undefined;
     this.stepAttack = undefined;
     this.animation = false;
+    this.themes = 'prairie';
+    this.playerVictory = false;
+    this.countMembers = 4;
+    this.level = 1;
   }
 
   static from(object) {

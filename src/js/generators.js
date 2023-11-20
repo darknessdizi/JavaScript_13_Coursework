@@ -15,7 +15,8 @@ export function* characterGenerator(allowedTypes, maxLevel) {
   while (true) {
     const level = Math.floor(Math.random() * maxLevel) + 1;
     const index = Math.floor(Math.random() * allowedTypes.length);
-    yield new allowedTypes[index](level);
+    const unit = new allowedTypes[index](level);
+    yield levelUp(unit);
   }
 }
 
@@ -35,4 +36,26 @@ export function generateTeam(allowedTypes, maxLevel, characterCount) {
     list.push(playerGenerator.next().value);
   }
   return new Team(list);
+}
+
+export function levelUp(unit) {
+  for (let i = 1; i < unit.level; i += 1) {
+    const { health } = unit;
+
+    let { attack } = unit;
+    attack = Math.max(attack, attack * (80 + health) / 100);
+    attack = Math.round(attack);
+    unit.attack = attack;
+
+    let { defence } = unit;
+    defence = Math.max(defence, defence * (80 + health) / 100);
+    defence = Math.round(defence);
+    unit.defence = defence;
+
+    unit.health += 80;
+    if (unit.health > 100) {
+      unit.health = 100;
+    }
+  }
+  return unit;
 }

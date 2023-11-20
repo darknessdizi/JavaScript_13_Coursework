@@ -24,4 +24,20 @@ export default class Character {
       throw new Error('Нельзя использовать вызов new Character()');
     }
   }
+
+  levelUp(level = null) {
+    this.level += level;
+    let attack = Math.max(this.attack, this.attack * (80 + this.health) / 100);
+    attack = Math.round(attack);
+    this.attack = attack;
+  
+    let defence = Math.max(this.defence, this.defence * (80 + this.health) / 100);
+    defence = Math.round(defence);
+    this.defence = defence;
+  
+    this.health += 80;
+    if (this.health > 100) {
+      this.health = 100;
+    }
+  }
 }

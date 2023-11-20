@@ -1,7 +1,7 @@
 import Bowman from './characters/Bowman';
 import Swordsman from './characters/Swordsman';
 import Magician from './characters/Magician';
-import { generateTeam, levelUp } from './generators';
+import { generateTeam } from './generators';
 import Daemon from './characters/Daemon';
 import Undead from './characters/Undead';
 import Vampire from './characters/Vampire';
@@ -11,6 +11,7 @@ import GamePlay from './GamePlay';
 import GameState from './GameState';
 import cursors from './cursors';
 import Team from './Team';
+import themes from './themes';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -22,37 +23,38 @@ export default class GameController {
   init() {
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
+    const count = this.gameState.countMembers;
+    const level = this.gameState.level;
+    const theme = Object.values(themes)[level - 1];
+    let teamPlayer = undefined;
 
     this.gamePlay.boardSize = 10; // ***!!!!!*** убрать в конце
-    this.gamePlay.drawUi(this.gameState.themes);
+    this.gamePlay.drawUi(theme);
     const div = document.querySelector('.board'); // ***!!!!!*** убрать в конце
     div.style.gridTemplateColumns = 'repeat(10, 1fr)'; // ***!!!!!*** убрать в конце
     this.gameState.matrix = getFieldMatrix(this.gamePlay.boardSize);
 
-    const count = 4;
-    // const count = this.gameState.countMembers;
     const positionIndexes = getIndexPositions(this.gamePlay.boardSize);
 
-    let teamPlayer = undefined;
     if (!this.gameState.playerVictory) {
+      this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+      this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+      this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
       const playerTypes = [Bowman, Swordsman, Magician];
       // const playerTypes = [Swordsman];
-      teamPlayer = generateTeam(playerTypes, this.gameState.level, 8);
+      teamPlayer = generateTeam(playerTypes, level, count);
     } else {
-      const list = this.gameState.players.map((item) => {
-        return item.character;
-      });
+      const list = this.gameState.players.map((item) => item.character);
       teamPlayer = new Team(list);
     }
     console.log('generateTeam', teamPlayer);
 
-    // const evilTypes = [Daemon, Undead, Vampire];
-    // const evilTypes = [Daemon, Vampire];
-    const evilTypes = [Undead];
-    const teamEnemy = generateTeam(evilTypes, this.gameState.level, count);
+    const evilTypes = [Daemon, Undead, Vampire];
+    // const evilTypes = [Undead];
+    const teamEnemy = generateTeam(evilTypes, level, count);
 
-    const players = GameController.assignPositionsCharacters(teamPlayer, positionIndexes.player);
-    const enemies = GameController.assignPositionsCharacters(teamEnemy, positionIndexes.enemy);
+    const players = GameController.assignPositions(teamPlayer, positionIndexes.player);
+    const enemies = GameController.assignPositions(teamEnemy, positionIndexes.enemy);
     //// ++++++++++++++++++++++++++++++++++++
     // players[0].position = 90;
     // enemies[0].position = 9;
@@ -70,10 +72,6 @@ export default class GameController {
     console.log('Команда игрока', players)
     this.gamePlay.redrawPositions([...players, ...enemies]);
 
-    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
-    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
-    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
-
     if (this.gameState.players.length > 0) {
       this.gameState.players.length = 0;
       this.gameState.playerTypes.length = 0;
@@ -83,16 +81,12 @@ export default class GameController {
     this.gameState.enemies.push(...enemies);
 
     const typesSet = new Set();
-    teamPlayer.characters.forEach(element => {
-      typesSet.add(element.type);
-    });
+    teamPlayer.characters.forEach((element) => typesSet.add(element.type));
     this.gameState.playerTypes = Array.from(typesSet);
 
     typesSet.clear();
 
-    teamEnemy.characters.forEach(element => {
-      typesSet.add(element.type);
-    });
+    teamEnemy.characters.forEach((element) => typesSet.add(element.type));
     this.gameState.enemyTypes = Array.from(typesSet);
   }
 
@@ -236,7 +230,7 @@ export default class GameController {
     }
   }
 
-  static assignPositionsCharacters(object, listIndex) {
+  static assignPositions(object, listIndex) {
     const result = [];
     for (let i = 0; i < object.characters.length; i += 1) {
       const player = object.characters[i];
@@ -345,30 +339,11 @@ export default class GameController {
   }
 
   upgradeUnits() {
-    // Метод повышает показатели персонажей команды игрока
+    // Метод повышает уровень и показатели персонажей команды игрока
     console.log('****************************************');
     console.log('Новый уровень', this.gameState);
-    for (const index in this.gameState.players) {
-      this.gameState.players[index].character.level += 1;
-      const unit = levelUp(this.gameState.players[index].character);
-
-      // this.gameState.players[index].character.level += 1;
-      // const { health } = this.gameState.players[index].character;
-
-      // let { attack } = this.gameState.players[index].character;
-      // attack = Math.max(attack, attack * (80 + health) / 100);
-      // attack = Math.round(attack);
-      // this.gameState.players[index].character.attack = attack;
-
-      // let { defence } = this.gameState.players[index].character;
-      // defence = Math.max(defence, defence * (80 + health) / 100);
-      // defence = Math.round(defence);
-      // this.gameState.players[index].character.defence = defence;
-
-      // this.gameState.players[index].character.health += 80;
-      // if (this.gameState.players[index].character.health > 100) {
-      //   this.gameState.players[index].character.health = 100;
-      // }
+    for (const obj of this.gameState.players) {
+      obj.character.levelUp(1);
     }
     this.gamePlay.redrawPositions(this.gameState.players);
   }

@@ -12,6 +12,7 @@ export default class GameState {
     this.cursorStatus = true;
     this.step = undefined;
     this.stepAttack = undefined;
+    this.animation = false;
   }
 
   static from(object) {

@@ -28,16 +28,16 @@ export default class GameController {
     div.style.gridTemplateColumns = 'repeat(10, 1fr)'; // ***!!!!!*** убрать в конце
     this.gameState.matrix = getFieldMatrix(this.gamePlay.boardSize);
 
-    const count = 3;
+    const count = 1;
     const positionIndexes = getIndexPositions(this.gamePlay.boardSize);
 
     const playerTypes = [Bowman, Swordsman, Magician];
     // const playerTypes = [Swordsman];
-    const teamPlayer = generateTeam(playerTypes, 1, count);
+    const teamPlayer = generateTeam(playerTypes, 1, 8);
 
-    const evilTypes = [Daemon, Undead, Vampire];
+    // const evilTypes = [Daemon, Undead, Vampire];
     // const evilTypes = [Daemon, Vampire];
-    // const evilTypes = [Undead];
+    const evilTypes = [Undead];
     const teamEnemy = generateTeam(evilTypes, 1, count);
 
     const players = GameController.assignPositionsCharacters(teamPlayer, positionIndexes.player);
@@ -82,7 +82,11 @@ export default class GameController {
 
   onCellClick(index) {
     // TODO: react to click
+    if (this.gameState.animation) {
+      return;
+    }
     if (this.gameState.stepUser) {
+      console.log('-----------------------------');
       console.log('Ходит игрок');
     }
     const arrayTeams = [...this.gameState.players, ...this.gameState.enemies];
@@ -130,10 +134,6 @@ export default class GameController {
         // нападаем на противника
         console.log('Напал на противника', unit);
         this.attackOnUnit(arrayTeams, index, unitsTypes);
-        // if (!this.gameState.stepUser) {
-        //   console.log('Ходит противник');
-        //   this.stepComputer();
-        // }
         console.log('Сейчас будет ретурн для онклик');
         return;
       }
@@ -242,31 +242,35 @@ export default class GameController {
   }
 
   attackOnUnit(arrayTeams, index, unitsTypes) {
+    // Метод осуществляет расчет и анимацию атаки на противника
     let attacker = arrayTeams.find((item) => item.position === this.gameState.lostIndex);
     attacker = attacker.character;
 
     let target = arrayTeams.find((item) => item.position === index);
+    console.log('Сейчас погибнет', target);
     const indexTarget = arrayTeams.indexOf(target);
     target = target.character;
     const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1)
     const result = this.gamePlay.showDamage(index, damage);
+    this.gameState.animation = true;
     const health = arrayTeams[indexTarget].character.health;
     arrayTeams[indexTarget].character.health = health - damage;
     const oldIndex = this.gameState.lostIndex;
+    
     result.then(() => {
       this.gamePlay.redrawPositions(arrayTeams);
+      this.gameState.animation = false;
       if (arrayTeams[indexTarget].character.health <= 0) {
         arrayTeams.splice(indexTarget, 1);
         this.gamePlay.redrawPositions(arrayTeams);
         const unit = unitsTypes.enemy.find((item) => item.position === index);
         const number = unitsTypes.enemy.indexOf(unit);
-        if (unit) {
-          if (unitsTypes.type.includes(unit.character.type)) {
-            this.gameState.players.splice(number, 1);
-          } else {
-            this.gameState.enemies.splice(number, 1);
-          }
-        } else { return; }
+        console.log('Зашли в раздел');
+        if (this.gameState.stepUser) {
+          this.gameState.enemies.splice(number, 1);
+        } else {
+          this.gameState.players.splice(number, 1);
+        }
         console.log('Unit погибает');
       }
       
@@ -292,6 +296,8 @@ export default class GameController {
     console.log('Живые противники', this.gameState.enemies.length);
     if (this.gameState.enemies.length === 0) {
       console.log('Все противники погибли');
+      this.gameState.stepUser = true;
+      this.upgradeUnits();
       return;
     }
     const unit = this.inviteUnit();
@@ -316,6 +322,28 @@ export default class GameController {
     const { x, y } = this.getCordsMove(cordsComputer, cordsTarget, step);
     // console.log('Go to', x, y)
     this.onCellClick(this.gameState.matrix[x][y]);
+  }
+
+  upgradeUnits() {
+    // Метод повышает показатели персонажей команды игрока
+    console.log('****************************************');
+    console.log('Новый уровень', this.gameState);
+    for (const index in this.gameState.players) {
+      this.gameState.players[index].character.level += 1;
+
+      const { attack } = this.gameState.players[index].character;
+      const { defence } = this.gameState.players[index].character;
+      const { health } = this.gameState.players[index].character;
+
+      this.gameState.players[index].character.attack = Math.max(attack, attack * (80 + health) / 100);
+      this.gameState.players[index].character.defence = Math.max(defence, defence * (80 + health) / 100);
+
+      this.gameState.players[index].character.health += 80;
+      if (this.gameState.players[index].character.health > 100) {
+        this.gameState.players[index].character.health = 100;
+      }
+    }
+    this.gamePlay.redrawPositions(this.gameState.players);
   }
 
   inviteUnit() {

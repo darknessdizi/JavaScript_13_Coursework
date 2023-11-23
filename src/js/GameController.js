@@ -37,10 +37,6 @@ export default class GameController {
     const listThemes = Object.values(themes);
     const index = (level - 1) - (countThemes * listThemes.length);
     const theme = listThemes[index];
-
-    if (Number.isInteger(level / listThemes.length)) {
-      this.gameState.countThemes += 1;
-    }
     let teamPlayer;
 
     // this.gamePlay.boardSize = 10; // ***!!!!!*** убрать в конце
@@ -279,17 +275,12 @@ export default class GameController {
     console.log('!!!!!!!!! Загрузка игры !!!!!!!!!!');
     const object = this.stateService.load();
     this.gameState.from(object);
-    console.log('this.gameState', this.gameState);
+    // console.log('this.gameState', this.gameState);
     const { level } = this.gameState;
     const { countThemes } = this.gameState;
     const listThemes = Object.values(themes);
     const index = (level - 1) - (countThemes * listThemes.length);
-    console.log('index', index, level, countThemes);
     const theme = listThemes[index];
-    console.log('theme', theme);
-    if (Number.isInteger(level / listThemes.length)) {
-      this.gameState.countThemes += 1;
-    }
 
     this.gamePlay.drawUi(theme);
     const { players } = this.gameState;
@@ -388,7 +379,13 @@ export default class GameController {
       this.gameState.stepUser = true;
       this.upgradeUnits();
       this.gameState.playerVictory = true;
+      let { level } = this.gameState;
+      const listThemes = Object.values(themes);
       this.gameState.level += 1;
+      level += 1;
+      if (Number.isInteger((level - 1) / listThemes.length)) {
+        this.gameState.countThemes += 1;
+      }
       this.init();
       return;
     }

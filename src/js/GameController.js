@@ -73,10 +73,10 @@ export default class GameController {
       teamPlayer = new Team(list);
     }
 
-    const evilTypes = [Daemon, Undead, Vampire];
-    // const evilTypes = [Undead];
-    // const teamEnemy = generateTeam(evilTypes, 1, 1);
-    const teamEnemy = generateTeam(evilTypes, level, countMembers);
+    // const evilTypes = [Daemon, Undead, Vampire];
+    const evilTypes = [Undead];
+    const teamEnemy = generateTeam(evilTypes, 1, 1);
+    // const teamEnemy = generateTeam(evilTypes, level, countMembers);
 
     let players;
     let enemies;
@@ -349,6 +349,9 @@ export default class GameController {
         if (this.gameState.stepUser) {
           this.gameState.score += unit.character.level * 100;
           this.gameState.enemies.splice(number, 1);
+          if (this.gameState.score > this.gameState.maxScore) {
+            this.gameState.maxScore = this.gameState.score;
+          }
         } else {
           this.gameState.players.splice(number, 1);
         }

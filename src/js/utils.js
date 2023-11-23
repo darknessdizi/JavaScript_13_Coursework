@@ -99,10 +99,43 @@ export function getСoordinates(index, matrix) {
   const result = { X: null, Y: null };
   for (let x = 0; x < matrix.length; x += 1) {
     result.Y = matrix[x].indexOf(index);
-    if (result.Y != -1) {
+    if (result.Y !== -1) {
       result.X = x;
       break;
     }
   }
   return result;
+}
+
+export function compareLevel(a, b) {
+  let value;
+  if (a.character.level > b.character.level) value = -1;
+  if (a.character.level === b.character.level) value = 0;
+  if (a.character.level < b.character.level) value = 1;
+  return value;
+}
+
+export function compareDistance(a, b) {
+  let value;
+  if (a.distance > b.distance) value = 1;
+  if (a.distance === b.distance) value = 0;
+  if (a.distance < b.distance) value = -1;
+  return value;
+}
+
+export function countStep(metric, unit) {
+  // Метод определяет шаг для движения unit. Возращает значение шага.
+  let step;
+  if (metric.distance >= unit.character.stepAttack) {
+    step = metric.distance;
+    if (metric.distance > unit.character.step) {
+      step = unit.character.step;
+    }
+  } else {
+    step = metric.distance;
+    if (metric.distance > unit.character.step) {
+      step = unit.character.step;
+    }
+  }
+  return step;
 }

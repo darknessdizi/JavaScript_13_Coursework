@@ -22,6 +22,8 @@ const listClass = [
       defence: 25,
       health: 50,
       level: 1,
+      step: 2,
+      stepAttack: 2,
       type: 'bowman',
     },
   ],
@@ -33,6 +35,8 @@ const listClass = [
       defence: 10,
       health: 50,
       level: 1,
+      step: 4,
+      stepAttack: 1,
       type: 'swordsman',
     },
   ],
@@ -44,6 +48,8 @@ const listClass = [
       defence: 40,
       health: 50,
       level: 1,
+      step: 1,
+      stepAttack: 4,
       type: 'magician',
     },
   ],
@@ -55,6 +61,8 @@ const listClass = [
       defence: 40,
       health: 50,
       level: 1,
+      step: 1,
+      stepAttack: 4,
       type: 'daemon',
     },
   ],
@@ -66,6 +74,8 @@ const listClass = [
       defence: 10,
       health: 50,
       level: 1,
+      step: 4,
+      stepAttack: 1,
       type: 'undead',
     },
   ],
@@ -77,6 +87,8 @@ const listClass = [
       defence: 25,
       health: 50,
       level: 1,
+      step: 2,
+      stepAttack: 2,
       type: 'vampire',
     },
   ],
@@ -87,4 +99,60 @@ testClass('Создание класса %s - дочерний от Character', 
   const unit = new ClassCaracter(1);
   expect(unit).toBeInstanceOf(ClassCaracter);
   expect(unit).toEqual(result);
+  // unit.levelUp(1);
+  // expect(unit.level).toEqual(2);
+});
+
+test('Создание демона и мага', () => {
+  const result = {
+    attack: 23,
+    defence: 94,
+    health: 100,
+    level: 3,
+    step: 1,
+    stepAttack: 4,
+  };
+  result.type = 'daemon';
+  const demon = new Daemon(3);
+  expect(demon).toEqual(result);
+
+  result.type = 'magician';
+  const magician = new Magician(3);
+  expect(magician).toEqual(result);
+});
+
+test('Создание вампира и лучника', () => {
+  const result = {
+    attack: 33,
+    defence: 33,
+    health: 100,
+    level: 2,
+    step: 2,
+    stepAttack: 2,
+  };
+  result.type = 'vampire';
+  const vampire = new Vampire(2);
+  expect(vampire).toEqual(result);
+
+  result.type = 'bowman';
+  const bowman = new Bowman(2);
+  expect(bowman).toEqual(result);
+});
+
+test('Создание нежити и мечника', () => {
+  const result = {
+    attack: 169,
+    defence: 41,
+    health: 100,
+    level: 4,
+    step: 4,
+    stepAttack: 1,
+  };
+  result.type = 'undead';
+  const undead = new Undead(4);
+  expect(undead).toEqual(result);
+
+  result.type = 'swordsman';
+  const swordsman = new Swordsman(4);
+  expect(swordsman).toEqual(result);
 });

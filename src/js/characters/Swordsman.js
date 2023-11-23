@@ -10,7 +10,7 @@ export default class Swordsman extends Character {
 
     if (this.level > 1) {
       for (let i = 1; i < this.level; i += 1) {
-        this.levelUp();
+        Character.levelUp.call(this);
       }
     }
   }

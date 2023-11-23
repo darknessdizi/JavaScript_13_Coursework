@@ -75,8 +75,8 @@ export default class GameController {
 
     const evilTypes = [Daemon, Undead, Vampire];
     // const evilTypes = [Undead];
-    const teamEnemy = generateTeam(evilTypes, 1, 1);
-    // const teamEnemy = generateTeam(evilTypes, level, countMembers);
+    // const teamEnemy = generateTeam(evilTypes, 1, 1);
+    const teamEnemy = generateTeam(evilTypes, level, countMembers);
 
     let players;
     let enemies;
@@ -217,7 +217,6 @@ export default class GameController {
       const { step } = this.gameState;
       if (unit) {
         const { stepAttack } = this.gameState;
-        // if (index === this.gameState.lostIndex) {  };
         if (unitsTypes.includes(unit.character.type)) {
           if ((x > stepAttack) || (y > stepAttack)) {
             this.gamePlay.setCursor(cursors.notallowed);

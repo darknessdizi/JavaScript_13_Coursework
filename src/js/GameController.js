@@ -38,7 +38,7 @@ export default class GameController {
         return;
       }
     }
-    
+
     const { countMembers } = this.gameState;
     const { level } = this.gameState;
     const { countThemes } = this.gameState;
@@ -85,10 +85,8 @@ export default class GameController {
     // const teamEnemy = generateTeam(evilTypes, 1, 1);
     const teamEnemy = generateTeam(evilTypes, level, countMembers);
 
-    let players;
-    let enemies;
-    players = GameController.assignPositions(teamPlayer, positionIndexes.player);
-    enemies = GameController.assignPositions(teamEnemy, positionIndexes.enemy);
+    const players = GameController.assignPositions(teamPlayer, positionIndexes.player);
+    const enemies = GameController.assignPositions(teamEnemy, positionIndexes.enemy);
     // ++++++++++++++++++++++++++++++++++++
     // players[0].position = 5;
     // enemies[0].position = 37;

@@ -20,7 +20,8 @@ export default class GameState {
     this.newGame = false;
     this.score = 0;
     this.maxScore = 0;
-    this.loadGame = false;
+    this.addListener = true;
+    this.firstRun = true;
   }
 
   from(object) {
@@ -45,7 +46,6 @@ export default class GameState {
     this.newGame = object.newGame;
     this.score = object.score;
     this.maxScore = object.maxScore;
-    this.loadGame = object.loadGame;
     return null;
   }
 }

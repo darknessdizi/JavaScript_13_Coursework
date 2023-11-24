@@ -30,7 +30,15 @@ export default class GameController {
 
   init() {
     // localStorage.removeItem('state');
-
+    if (this.gameState.firstRun) {
+      this.gameState.firstRun = false;
+      if (this.stateService.load()) {
+        console.log('------- Идет загрузка игры -------');
+        this.onLoadGame();
+        return;
+      }
+    }
+    
     const { countMembers } = this.gameState;
     const { level } = this.gameState;
     const { countThemes } = this.gameState;
@@ -49,17 +57,20 @@ export default class GameController {
 
     if (!this.gameState.playerVictory) {
       if (!this.gameState.newGame) {
-        console.log('Запуск слушателей и создание команды');
-        this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
-        this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
-        this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
-        this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
-        this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
-        this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+        if (this.gameState.addListener) {
+          console.log('Добавляются обработчики событий и создаётся команда');
+          this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+          this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+          this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+          this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
+          this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
+          this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+          this.gameState.addListener = false;
+        }
         const playerTypes = [Bowman, Swordsman, Magician];
         teamPlayer = generateTeam(playerTypes, level, countMembers);
       } else {
-        console.log('Создаем команду (слушателей не добавляем)');
+        console.log('Создаем команду (обработчиков событий не добавляем)');
         const playerTypes = [Bowman, Swordsman, Magician];
         teamPlayer = generateTeam(playerTypes, level, countMembers);
       }
@@ -69,20 +80,15 @@ export default class GameController {
       teamPlayer = new Team(list);
     }
 
-    // const evilTypes = [Daemon, Undead, Vampire];
-    const evilTypes = [Undead];
-    const teamEnemy = generateTeam(evilTypes, 1, 1);
-    // const teamEnemy = generateTeam(evilTypes, level, countMembers);
+    const evilTypes = [Daemon, Undead, Vampire];
+    // const evilTypes = [Undead];
+    // const teamEnemy = generateTeam(evilTypes, 1, 1);
+    const teamEnemy = generateTeam(evilTypes, level, countMembers);
 
     let players;
     let enemies;
-    if (this.gameState.loadGame) {
-      players = this.gameState.players;
-      enemies = this.gameState.enemies;
-    } else {
-      players = GameController.assignPositions(teamPlayer, positionIndexes.player);
-      enemies = GameController.assignPositions(teamEnemy, positionIndexes.enemy);
-    }
+    players = GameController.assignPositions(teamPlayer, positionIndexes.player);
+    enemies = GameController.assignPositions(teamEnemy, positionIndexes.enemy);
     // ++++++++++++++++++++++++++++++++++++
     // players[0].position = 5;
     // enemies[0].position = 37;
@@ -102,11 +108,8 @@ export default class GameController {
     this.gameState.playerTypes = Array.from(typesSet);
 
     typesSet.clear();
-
     teamEnemy.characters.forEach((element) => typesSet.add(element.type));
     this.gameState.enemyTypes = Array.from(typesSet);
-
-    console.log(this.gameState);
   }
 
   onCellClick(index) {
@@ -115,7 +118,7 @@ export default class GameController {
     }
     if (this.gameState.stepUser) {
       console.log('-----------------------------');
-      console.log('Ходит игрок');
+      console.log('          Ходит игрок');
     }
     const arrayTeams = [...this.gameState.players, ...this.gameState.enemies];
     console.log('Текущее состояние команд', arrayTeams);
@@ -148,9 +151,9 @@ export default class GameController {
 
       this.gamePlay.setCursor(cursors.auto);
       if (!this.gameState.stepUser) {
-        // передача ход противнику
+        // передача хода противнику
         console.log('-----------------------------');
-        console.log('Ходит противник');
+        console.log('          Ходит противник');
         this.stepComputer();
       }
     }
@@ -252,8 +255,7 @@ export default class GameController {
 
   onNewGame() {
     // Действия при нажатии кнопки New Game
-    console.log('Начать новую игру');
-    console.log('Текущие показатели', this.gameState);
+    console.log('---------- Начать новую игру ----------');
     const { score, maxScore } = this.gameState;
     this.gameState = new GameState();
     if (score > maxScore) {
@@ -262,20 +264,20 @@ export default class GameController {
       this.gameState.maxScore = maxScore;
     }
     this.gameState.newGame = true;
+    this.gameState.firstRun = false;
+    this.gameState.addListener = false;
     console.log('Текущие показатели после очистки', this.gameState);
     this.init();
   }
 
   onSaveGame() {
     this.stateService.save(this.gameState);
-    console.log('Игра сохранена!!!');
+    console.log('********** Игра сохранена **********');
   }
 
   onLoadGame() {
-    console.log('!!!!!!!!! Загрузка игры !!!!!!!!!!');
     const object = this.stateService.load();
     this.gameState.from(object);
-    // console.log('this.gameState', this.gameState);
     const { level } = this.gameState;
     const { countThemes } = this.gameState;
     const listThemes = Object.values(themes);
@@ -286,6 +288,16 @@ export default class GameController {
     const { players } = this.gameState;
     const { enemies } = this.gameState;
     this.gamePlay.redrawPositions([...players, ...enemies]);
+    if (this.gameState.addListener) {
+      console.log('Добавлены слушатели в методе onLoadGame');
+      this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+      this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+      this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+      this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
+      this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
+      this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+      this.gameState.addListener = false;
+    }
   }
 
   static assignPositions(object, listIndex) {
@@ -316,7 +328,6 @@ export default class GameController {
     attacker = attacker.character;
 
     let target = arrayTeams.find((item) => item.position === index);
-    console.log('Сейчас атакуют:', target);
     const indexTarget = arrayTeams.indexOf(target);
     target = target.character;
     let damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
@@ -358,7 +369,7 @@ export default class GameController {
       console.log('Прошла асинхронка', this.gameState);
       if (!this.gameState.stepUser) {
         console.log('-----------------------------');
-        console.log('Ходит противник');
+        console.log('          Ходит противник');
         this.stepComputer();
       }
     });
@@ -416,7 +427,7 @@ export default class GameController {
   upgradeUnits() {
     // Метод повышает уровень и показатели персонажей команды игрока
     console.log('**************** Повышение уровней *********************');
-    console.log('Новый уровень', this.gameState);
+    console.log('----- Новый уровень:', this.gameState.level + 1);
     for (let i = 0; i < this.gameState.players.length; i += 1) {
       const obj = this.gameState.players[i];
       Character.levelUp.call(obj.character, 1);

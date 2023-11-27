@@ -4,6 +4,9 @@ export default class GameStateService {
   }
 
   save(state) {
+    // const test = new WeakMap();
+    // const result = {test: 1};
+    // this.storage.setItem('state', result);
     this.storage.setItem('state', JSON.stringify(state));
   }
 

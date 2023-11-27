@@ -38,6 +38,10 @@ export default class GamePlay {
       <div class="board-container">
         <div data-id="board" class="board"></div>
       </div>
+      <div class="score-container">
+        <div data-id="total-score" class="score">Максимальный результат: <span>0</span></div>
+        <div data-id="score" class="score">Текущий счет: <span>0</span></div>
+      </div>
     `;
 
     this.newGameEl = this.container.querySelector('[data-id=action-restart]');
@@ -61,6 +65,13 @@ export default class GamePlay {
     }
 
     this.cells = Array.from(this.boardEl.children);
+  }
+
+  showScore(maxScore, score) {
+    const container = document.querySelector('.score-container');
+    const div = container.querySelectorAll('span');
+    div[0].textContent = maxScore;
+    div[1].textContent = score;
   }
 
   /**

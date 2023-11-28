@@ -27,6 +27,10 @@ body {
   border: none;
 }
 
+.btn:hover {
+  background-color: rgb(187, 248, 218);
+}
+
 .controls {
   text-align: center;
   margin: 50px 0;
@@ -238,6 +242,19 @@ body {
   color: #f00;
   font-weight: bold;
   animation: 500ms fade ease-out;
+}
+
+.score-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score {
+  font-weight: 400;
+  color: #ad240c;
+  background: #000;
+  font-size: 2rem;
 }
 
 @keyframes fade {

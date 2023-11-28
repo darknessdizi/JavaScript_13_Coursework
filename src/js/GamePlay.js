@@ -67,7 +67,7 @@ export default class GamePlay {
     this.cells = Array.from(this.boardEl.children);
   }
 
-  showScore(maxScore, score) {
+  static showScore(maxScore, score) {
     const container = document.querySelector('.score-container');
     const div = container.querySelectorAll('span');
     div[0].textContent = maxScore;

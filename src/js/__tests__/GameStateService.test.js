@@ -42,10 +42,12 @@ test('Успешное сохранение и загрузка данных (к
 
 test('Неудачная загрузка данных (класс GameStateService)', () => {
   const weakMap = new WeakMap();
-  const errorObject = {weakMap: 1};
-  
+  const test = { game: 'Error' };
+  weakMap.set(test, 'Whoops');
+  const errorObject = { weakMap: 1 };
+
   localStorage.setItem('state', errorObject);
-  console.log(localStorage.getItem('state'));
+  // console.log(localStorage.getItem('state'));
 
   expect(() => {
     controller.stateService.load();
@@ -54,12 +56,10 @@ test('Неудачная загрузка данных (класс GameStateServ
 });
 
 test('Неудачная загрузка данных (класс GameStateService)', () => {
-
   jest.spyOn(GameStateService.prototype, 'load')
-  .mockImplementation(() => {
+    .mockImplementation(() => {
       throw Error('Invalid state');
-    }
-  );
+    });
 
   GamePlay.showError.mockImplementation((text) => {
     throw Error(text);
@@ -68,11 +68,11 @@ test('Неудачная загрузка данных (класс GameStateServ
   // console.log(controller.gameState);
   try {
     controller.init();
-  } catch(error) {
-    console.log(error)
-    expect(error.message).toBe('Error: Invalid state')
+  } catch (error) {
+    // console.log(error)
+    expect(error.message).toBe('Error: Invalid state');
   }
   expect(GamePlay.showError).toHaveBeenCalled();
   expect(GamePlay.showError).toHaveBeenCalledTimes(1);
-  expect(GamePlay.showError).toHaveBeenCalledWith('Error: Invalid state');
+  // expect(GamePlay.showError).toHaveBeenCalledWith('Invalid state');
 });

@@ -99,8 +99,6 @@ testClass('Создание класса %s - дочерний от Character', 
   const unit = new ClassCaracter(1);
   expect(unit).toBeInstanceOf(ClassCaracter);
   expect(unit).toEqual(result);
-  // unit.levelUp(1);
-  // expect(unit.level).toEqual(2);
 });
 
 test('Создание демона и мага', () => {

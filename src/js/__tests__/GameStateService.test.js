@@ -47,7 +47,6 @@ test('Неудачная загрузка данных (класс GameStateServ
   const errorObject = { weakMap: 1 };
 
   localStorage.setItem('state', errorObject);
-  // console.log(localStorage.getItem('state'));
 
   expect(() => {
     controller.stateService.load();
@@ -65,14 +64,11 @@ test('Неудачная загрузка данных (класс GameStateServ
     throw Error(text);
   });
 
-  // console.log(controller.gameState);
   try {
     controller.init();
   } catch (error) {
-    // console.log(error)
     expect(error.message).toBe('Error: Invalid state');
   }
   expect(GamePlay.showError).toHaveBeenCalled();
   expect(GamePlay.showError).toHaveBeenCalledTimes(1);
-  // expect(GamePlay.showError).toHaveBeenCalledWith('Invalid state');
 });

@@ -37,7 +37,7 @@ export default class GameController {
         return;
       } 
     }
-    // console.log('Проскочил');
+    console.log('Проскочил');
     const { countMembers } = this.gameState;
     const { level } = this.gameState;
     const { countThemes } = this.gameState;
@@ -57,7 +57,7 @@ export default class GameController {
     if (!this.gameState.playerVictory) {
       if (!this.gameState.newGame) {
         if (this.gameState.addListener) {
-          // console.log('Добавляются обработчики событий и создаётся команда');
+          console.log('Добавляются обработчики событий и создаётся команда');
           this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
           this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
           this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
@@ -110,6 +110,7 @@ export default class GameController {
     this.gameState.enemyTypes = Array.from(typesSet);
 
     this.gamePlay.showScore(this.gameState.maxScore, this.gameState.score);
+    // this.stateService.save(this.gameState); //********************* */
   }
 
   onCellClick(index) {
@@ -117,21 +118,21 @@ export default class GameController {
       return;
     }
     if (this.gameState.stepUser) {
-      // console.log('-----------------------------');
-      // console.log('          Ходит игрок');
+      console.log('-----------------------------');
+      console.log('          Ходит игрок');
     }
     const arrayTeams = [...this.gameState.players, ...this.gameState.enemies];
     // console.log('Текущее состояние команд', arrayTeams);
     const unit = arrayTeams.find((item) => item.position === index);
     if (!this.gameState.cursorStatus) {
       // нажатие на ячейку с запрещающим знаком курсора
-      // console.log('Нажат индекс', index)
+      console.log('Нажат индекс', index)
       GamePlay.showError('Недопустимое действие');
       return;
     }
     if ((!unit) && (this.gameState.unitAssign)) {
       // передвижение unit на новую ячейку
-      // console.log('Переместился на другую клекту');
+      console.log('Переместился на другую клекту');
       const findUnit = arrayTeams.find((item) => item.position === this.gameState.lostIndex);
       const indexUnit = arrayTeams.indexOf(findUnit);
       arrayTeams[indexUnit].position = index;
@@ -153,8 +154,8 @@ export default class GameController {
       this.gamePlay.setCursor(cursors.auto);
       if (!this.gameState.stepUser) {
         // передача хода противнику
-        // console.log('-----------------------------');
-        // console.log('          Ходит противник');
+        console.log('-----------------------------');
+        console.log('          Ходит противник');
         this.stepComputer();
       }
     }
@@ -171,13 +172,13 @@ export default class GameController {
       const userType = unitsTypes.type.includes(unit.character.type);
       if ((this.gameState.unitAssign) && (!userType)) {
         // нападаем на противника
-        // console.log('Напал на противника', unit);
+        console.log('Напал на противника', unit);
         this.attackOnUnit(arrayTeams, index, unitsTypes);
-        // console.log('Сейчас будет ретурн для онклик');
+        console.log('Сейчас будет ретурн для онклик');
         return;
       }
       if (userType) {
-        // console.log('Выбрал себе unit (нажал на него)', unit);
+        console.log('Выбрал себе unit (нажал на него)', unit);
         // нажали клик на собственных игроков
         if (this.gameState.lostIndex > -1) {
           this.gamePlay.deselectCell(this.gameState.lostIndex);
@@ -298,12 +299,12 @@ export default class GameController {
       data = this.stateService.load();
       console.log('Ошибки не было', data);
     } catch(error) {
-      GamePlay.showError(error.message);
+      GamePlay.showError(error);
       return false;
     }
     if (!data) {
       console.log('Записей нет');
-      return;
+      return false;
     }
     this.gameState.from(data);
     const { level } = this.gameState;
@@ -317,7 +318,7 @@ export default class GameController {
     const { enemies } = this.gameState;
     this.gamePlay.redrawPositions([...players, ...enemies]);
     if (this.gameState.addListener) {
-      // console.log('Добавлены слушатели в методе onLoadGame');
+      console.log('Добавлены слушатели в методе onLoadGame');
       this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
       this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
       this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
@@ -377,7 +378,7 @@ export default class GameController {
         this.gamePlay.redrawPositions(arrayTeams);
         const unit = unitsTypes.enemy.find((item) => item.position === index);
         const number = unitsTypes.enemy.indexOf(unit);
-        // console.log('Зашли в раздел');
+        console.log('Зашли в раздел');
         if (this.gameState.stepUser) {
           this.gameState.score += unit.character.level * 100;
           this.gameState.enemies.splice(number, 1);
@@ -388,7 +389,7 @@ export default class GameController {
         } else {
           this.gameState.players.splice(number, 1);
         }
-        // console.log('Unit погибает');
+        console.log('Unit погибает');
       }
 
       if (this.gameState.stepUser) {
@@ -397,12 +398,16 @@ export default class GameController {
         this.gameState.stepUser = true;
       }
 
-      // console.log('Прошла асинхронка', this.gameState);
+      console.log('Прошла асинхронка', this.gameState.addListener);
       if (!this.gameState.stepUser) {
-        // console.log('-----------------------------');
-        // console.log('          Ходит противник');
+        console.log('-----------------------------');
+        console.log('          Ходит противник');
         this.stepComputer();
       }
+      // this.gameState.addListener = true; //*************** */
+      // this.stateService.save(this.gameState);//************** */
+      // console.log('После ударов', this.gameState.addListener);   // **********************
+      // this.gameState.addListener = false; //*************** */
     });
     this.gameState.lostIndex = -1;
     this.gameState.unitAssign = false;
@@ -415,9 +420,9 @@ export default class GameController {
   }
 
   stepComputer() {
-    // console.log('Живые противники', this.gameState.enemies.length);
+    console.log('Живые противники', this.gameState.enemies.length);
     if (this.gameState.enemies.length === 0) {
-      // console.log('Все противники погибли');
+      console.log('Все противники погибли');
       this.gameState.stepUser = true;
       this.upgradeUnits();
       this.gameState.playerVictory = true;
@@ -445,20 +450,25 @@ export default class GameController {
     if (metric.distance <= 0) {
       // атакуем врага в зоне поражения (если такой имеется)
       this.onCellClick(this.gameState.matrix[cordsTarget.X][cordsTarget.Y]);
+      // this.gameState.addListener = true;
+      // this.stateService.save(this.gameState);
+      // console.log("враг ударил", this.gameState.addListener)
+      // this.gameState.addListener = false;
       return;
     }
 
     const step = countStep(metric, unit);
     // console.log('Размер нашего шага компьютера', step, 'Атака', this.gameState.stepAttack);
     const { x, y } = this.getCordsMove(cordsComputer, cordsTarget, step);
-    // console.log('Go to', x, y)
+    console.log('Go to', x, y)
     this.onCellClick(this.gameState.matrix[x][y]);
+    // this.stateService.save(this.gameState);
   }
 
   upgradeUnits() {
     // Метод повышает уровень и показатели персонажей команды игрока
-    // console.log('**************** Повышение уровней *********************');
-    // console.log('----- Новый уровень:', this.gameState.level + 1);
+    console.log('**************** Повышение уровней *********************');
+    console.log('----- Новый уровень:', this.gameState.level + 1);
     for (let i = 0; i < this.gameState.players.length; i += 1) {
       const obj = this.gameState.players[i];
       Character.levelUp.call(obj.character, 1);

@@ -121,12 +121,7 @@ export default class GameController {
       this.gameState.point = { X: null, Y: null };
       this.gameState.step = undefined;
       this.gameState.stepAttack = undefined;
-
-      if (this.gameState.stepUser) {
-        this.gameState.stepUser = false;
-      } else {
-        this.gameState.stepUser = true;
-      }
+      this.gameState.stepUser = this.gameState.stepUser ? false : true;
 
       this.gamePlay.setCursor(cursors.auto);
       if (!this.gameState.stepUser) {
@@ -137,19 +132,16 @@ export default class GameController {
     if (unit) {
       // действия если в нажатой ячейке присутствует unit
       const unitsTypes = {};
-      if (this.gameState.stepUser) {
-        unitsTypes.type = this.gameState.playerTypes;
-        unitsTypes.enemy = this.gameState.enemies;
-      } else {
-        unitsTypes.type = this.gameState.enemyTypes;
-        unitsTypes.enemy = this.gameState.players;
-      }
+      unitsTypes.type = this.gameState.stepUser ? this.gameState.playerTypes : this.gameState.enemyTypes;
+      unitsTypes.enemy = this.gameState.stepUser ? this.gameState.enemies : this.gameState.players;
+
       const userType = unitsTypes.type.includes(unit.character.type);
       if ((this.gameState.unitAssign) && (!userType)) {
         // нападаем на противника
         this.attackOnUnit(arrayTeams, index, unitsTypes);
         return;
       }
+      // console.log(unitsTypes, userType)
       if (userType) {
         // нажали клик на собственных игроков
         if (this.gameState.lostIndex > -1) {
@@ -169,12 +161,7 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    let unitsTypes;
-    if (this.gameState.stepUser) {
-      unitsTypes = this.gameState.enemyTypes;
-    } else {
-      unitsTypes = this.gameState.playerTypes;
-    }
+    const unitsTypes = this.gameState.stepUser ? this.gameState.enemyTypes : this.gameState.playerTypes;
     const arrayTeams = [...this.gameState.players, ...this.gameState.enemies];
     const unit = arrayTeams.find((item) => item.position === index);
     if (unit) {
@@ -247,11 +234,7 @@ export default class GameController {
     this.reloadScore();
     const { score, maxScore } = this.gameState;
     this.gameState = new GameState();
-    if (score > maxScore) {
-      this.gameState.maxScore = score;
-    } else {
-      this.gameState.maxScore = maxScore;
-    }
+    this.gameState.maxScore = Math.max(score, maxScore);
     this.gameState.newGame = true;
     this.gameState.firstRun = false;
     this.gameState.addListener = false;
@@ -376,24 +359,59 @@ export default class GameController {
     this.gamePlay.deselectCell(index);
   }
 
+  nextLevel() {
+    this.gameState.stepUser = true;
+    this.upgradeUnits();
+    this.gameState.playerVictory = true;
+    let { level } = this.gameState;
+    this.gameState.level += 1;
+    level += 1;
+    return level;
+  }
+
+  stepResolution(unit, cordsComputer) {
+    let result = true;
+    const metric = this.countDistance(cordsComputer);
+    console.log('metric', metric)
+    const cordsTarget = getСoordinates(metric.position, this.gameState.matrix);
+    console.log('cordsTarget', cordsTarget)
+    const step = countStep(metric, unit);
+    console.log('step', step)
+    const { x, y } = this.getCordsMove(cordsComputer, cordsTarget, step);
+    const index = this.gameState.matrix[x][y];
+    if (metric.distance > 0) {
+      this.gameState.enemies.forEach((item) => {
+        if (item.position === index) {
+          console.log('item.position', item.position, 'index', index);
+          result = false;
+        }
+      });
+    }
+    console.log(result)
+    return result;
+  }
+
   stepComputer() {
     if (this.gameState.enemies.length === 0) {
-      this.gameState.stepUser = true;
-      this.upgradeUnits();
-      this.gameState.playerVictory = true;
-      let { level } = this.gameState;
       const listThemes = Object.values(themes);
-      this.gameState.level += 1;
-      level += 1;
+      const level = this.nextLevel();
       if (Number.isInteger((level - 1) / listThemes.length)) {
         this.gameState.countThemes += 1;
       }
       this.init();
       return;
     }
-    const unit = this.inviteUnit();
-    const cordsComputer = getСoordinates(unit.position, this.gameState.matrix);
-    this.onCellClick(unit.position);
+
+    const listUnit = this.inviteUnits();
+    let unit, cordsComputer;
+    for (let i = 0; i < this.gameState.enemies.length; i += 1) {
+      unit = listUnit[i];
+      cordsComputer = getСoordinates(unit.position, this.gameState.matrix);
+      this.onCellClick(unit.position);
+      if (this.stepResolution(unit, cordsComputer)) {
+        break;
+      }
+    }
 
     const metric = this.countDistance(cordsComputer);
     const cordsTarget = getСoordinates(metric.position, this.gameState.matrix);
@@ -418,24 +436,18 @@ export default class GameController {
     this.gamePlay.redrawPositions(this.gameState.players);
   }
 
-  inviteUnit() {
+  inviteUnits() {
     // Метод выбирает unit по рангу классов и уровню персонажей.
-    const rangTypes = {
-      1: 'undead',
-      2: 'vampire',
-      3: 'daemon',
-    };
-    let listUnits;
+    const rangTypes = ['undead', 'vampire', 'daemon'];
+    const listUnits = [];
     const { enemies } = this.gameState;
-    for (const key in rangTypes) {
-      if (Object.prototype.hasOwnProperty.call(rangTypes, key)) {
-        listUnits = enemies.filter((item) => item.character.type === rangTypes[key]);
-        if (listUnits.length > 0) break;
-      }
-    }
 
-    listUnits.sort(compareLevel);
-    return listUnits[0];
+    for (let title of rangTypes) {
+      const newList = enemies.filter((item) => item.character.type === title);
+      newList.sort(compareLevel);
+      listUnits.push(...newList);
+    }
+    return listUnits;
   }
 
   countDistance(cordsComputer) {
@@ -449,6 +461,7 @@ export default class GameController {
       const targetX = Math.abs(cordsComputer.X - target.X);
       const targetY = Math.abs(cordsComputer.Y - target.Y);
       let distance;
+
       if (targetX <= this.gameState.stepAttack) {
         distance = targetY - this.gameState.stepAttack;
       } else if (targetY <= this.gameState.stepAttack) {

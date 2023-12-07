@@ -96,7 +96,6 @@ export function getFieldMatrix(boardSize) {
 }
 
 export function getСoordinates(index, matrix) {
-  // console.log('matrix', matrix, 'index', index)
   const result = { X: null, Y: null };
   for (let x = 0; x < matrix.length; x += 1) {
     result.Y = matrix[x].indexOf(index);
@@ -105,7 +104,6 @@ export function getСoordinates(index, matrix) {
       break;
     }
   }
-  // console.log('result', result)
   return result;
 }
 

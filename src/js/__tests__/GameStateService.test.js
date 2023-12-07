@@ -1,6 +1,7 @@
 import GameController from '../GameController';
 import GamePlay from '../GamePlay';
 import GameStateService from '../GameStateService';
+import Bowman from '../characters/Bowman';
 
 jest.mock('../GamePlay');
 
@@ -9,35 +10,32 @@ const gameStateService = new GameStateService(localStorage);
 const controller = new GameController(gamePlay, gameStateService);
 
 test('Успешное сохранение и загрузка данных (класс GameStateService)', () => {
-  controller.stateService.save(controller.gameState);
+  const unit = new Bowman(1);
+  const objectPlayer = {
+    character: unit,
+    position: 0,
+  };
+  controller.gameState.players.push(objectPlayer);
 
-  const object = controller.stateService.load();
-  controller.gameState.from(object);
+  controller.onSaveGame();
 
   expect(controller.stateService.load()).toEqual({
-    addListener: true,
-    animation: false,
-    countMembers: 4,
     countThemes: 0,
-    cursorStatus: true,
     enemies: [],
     enemyTypes: [],
-    firstRun: true,
     level: 1,
-    lostIndex: -1,
     maxScore: 0,
-    newGame: false,
     playerTypes: [],
-    playerVictory: false,
-    players: [],
-    point: {
-      X: null,
-      Y: null,
-    },
+    players: [
+      { character: unit, position: 0 },
+    ],
     score: 0,
-    stepUser: true,
-    unitAssign: false,
   });
+
+  const secondController = new GameController(gamePlay, gameStateService);
+  const data = secondController.stateService.load();
+  secondController.gameState.from(data);
+  expect(secondController.gameState.players[0].character).toBeInstanceOf(Bowman);
 });
 
 test('Неудачная загрузка данных (класс GameStateService)', () => {
@@ -67,7 +65,7 @@ test('Неудачная загрузка данных (класс GameStateServ
   try {
     controller.init();
   } catch (error) {
-    expect(error.message).toBe('Error: Invalid state');
+    expect(error.message).toBe('Invalid state');
   }
   expect(GamePlay.showError).toHaveBeenCalled();
   expect(GamePlay.showError).toHaveBeenCalledTimes(1);

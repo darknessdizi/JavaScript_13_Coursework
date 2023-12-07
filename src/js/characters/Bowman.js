@@ -8,9 +8,9 @@ export default class Bowman extends Character {
     this.step = 2;
     this.stepAttack = 2;
 
-    if (this.level > 1) {
-      for (let i = 1; i < this.level; i += 1) {
-        Character.levelUp.call(this);
+    if (level > 1) {
+      for (let i = 1; i < level; i += 1) {
+        this.levelUp();
       }
     }
   }

@@ -19,7 +19,6 @@ import GameState from './GameState';
 import cursors from './cursors';
 import Team from './Team';
 import themes from './themes';
-import Character from './Character';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -36,9 +35,7 @@ export default class GameController {
         return;
       }
     }
-    const { countMembers } = this.gameState;
-    const { level } = this.gameState;
-    const { countThemes } = this.gameState;
+    const { countMembers, level, countThemes } = this.gameState;
     const listThemes = Object.values(themes);
     const index = (level - 1) - (countThemes * listThemes.length);
     const theme = listThemes[index];
@@ -50,21 +47,11 @@ export default class GameController {
     const positionIndexes = getIndexPositions(this.gamePlay.boardSize);
 
     if (!this.gameState.playerVictory) {
-      if (!this.gameState.newGame) {
-        if (this.gameState.addListener) {
-          this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
-          this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
-          this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
-          this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
-          this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
-          this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
-          this.gameState.addListener = false;
-        }
-        const playerTypes = [Bowman, Swordsman, Magician];
-        teamPlayer = generateTeam(playerTypes, level, countMembers);
-      } else {
-        const playerTypes = [Bowman, Swordsman, Magician];
-        teamPlayer = generateTeam(playerTypes, level, countMembers);
+      const playerTypes = [Bowman, Swordsman, Magician];
+      teamPlayer = generateTeam(playerTypes, level, countMembers);
+
+      if (this.gameState.addListener) {
+        this.setListeners();
       }
     } else {
       const list = this.gameState.players.map((item) => item.character);
@@ -110,20 +97,7 @@ export default class GameController {
     }
     if ((!unit) && (this.gameState.unitAssign)) {
       // передвижение unit на новую ячейку
-      const findUnit = arrayTeams.find((item) => item.position === this.gameState.lostIndex);
-      const indexUnit = arrayTeams.indexOf(findUnit);
-      arrayTeams[indexUnit].position = index;
-      this.gamePlay.redrawPositions(arrayTeams);
-      this.gamePlay.deselectCell(this.gameState.lostIndex);
-      this.gamePlay.deselectCell(index);
-      this.gameState.unitAssign = false;
-      this.gameState.lostIndex = -1;
-      this.gameState.point = { X: null, Y: null };
-      this.gameState.step = undefined;
-      this.gameState.stepAttack = undefined;
-      this.gameState.stepUser = this.gameState.stepUser ? false : true;
-
-      this.gamePlay.setCursor(cursors.auto);
+      this.moveUnit(index, arrayTeams);
       if (!this.gameState.stepUser) {
         // передача хода противнику
         this.stepComputer();
@@ -132,8 +106,15 @@ export default class GameController {
     if (unit) {
       // действия если в нажатой ячейке присутствует unit
       const unitsTypes = {};
-      unitsTypes.type = this.gameState.stepUser ? this.gameState.playerTypes : this.gameState.enemyTypes;
-      unitsTypes.enemy = this.gameState.stepUser ? this.gameState.enemies : this.gameState.players;
+      const {
+        playerTypes,
+        enemyTypes,
+        enemies,
+        players,
+      } = this.gameState;
+
+      unitsTypes.type = this.gameState.stepUser ? playerTypes : enemyTypes;
+      unitsTypes.enemy = this.gameState.stepUser ? enemies : players;
 
       const userType = unitsTypes.type.includes(unit.character.type);
       if ((this.gameState.unitAssign) && (!userType)) {
@@ -141,7 +122,6 @@ export default class GameController {
         this.attackOnUnit(arrayTeams, index, unitsTypes);
         return;
       }
-      // console.log(unitsTypes, userType)
       if (userType) {
         // нажали клик на собственных игроков
         if (this.gameState.lostIndex > -1) {
@@ -161,7 +141,8 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    const unitsTypes = this.gameState.stepUser ? this.gameState.enemyTypes : this.gameState.playerTypes;
+    const { playerTypes, enemyTypes } = this.gameState;
+    const unitsTypes = this.gameState.stepUser ? enemyTypes : playerTypes;
     const arrayTeams = [...this.gameState.players, ...this.gameState.enemies];
     const unit = arrayTeams.find((item) => item.position === index);
     if (unit) {
@@ -214,21 +195,6 @@ export default class GameController {
     }
   }
 
-  reloadScore() {
-    let data;
-    try {
-      data = this.stateService.load();
-    } catch (error) {
-      GamePlay.showError(error.message);
-    }
-    if (data) {
-      if (this.gameState.maxScore > data.maxScore) {
-        data.maxScore = this.gameState.maxScore;
-        this.stateService.save(data);
-      }
-    }
-  }
-
   onNewGame() {
     // Действия при нажатии кнопки New Game
     this.reloadScore();
@@ -242,10 +208,22 @@ export default class GameController {
   }
 
   onSaveGame() {
-    this.stateService.save(this.gameState);
+    const obj = {
+      players: this.gameState.players,
+      enemies: this.gameState.enemies,
+      playerTypes: this.gameState.playerTypes,
+      enemyTypes: this.gameState.enemyTypes,
+      score: this.gameState.score,
+      maxScore: this.gameState.maxScore,
+      countThemes: this.gameState.countThemes,
+      level: this.gameState.level,
+      matrix: this.gameState.matrix,
+    };
+    this.stateService.save(obj);
   }
 
   onLoadGame() {
+    this.reloadScore();
     let data;
     try {
       data = this.stateService.load();
@@ -257,24 +235,16 @@ export default class GameController {
       return false;
     }
     this.gameState.from(data);
-    const { level } = this.gameState;
-    const { countThemes } = this.gameState;
+    const { level, countThemes } = this.gameState;
     const listThemes = Object.values(themes);
     const index = (level - 1) - (countThemes * listThemes.length);
     const theme = listThemes[index];
 
     this.gamePlay.drawUi(theme);
-    const { players } = this.gameState;
-    const { enemies } = this.gameState;
+    const { players, enemies } = this.gameState;
     this.gamePlay.redrawPositions([...players, ...enemies]);
     if (this.gameState.addListener) {
-      this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
-      this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
-      this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
-      this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
-      this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
-      this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
-      this.gameState.addListener = false;
+      this.setListeners();
     }
     GamePlay.showScore(this.gameState.maxScore, this.gameState.score);
     return true;
@@ -295,10 +265,13 @@ export default class GameController {
   }
 
   static getMessage(unit) {
-    const { level } = unit.character;
-    const { attack } = unit.character;
-    const { defence } = unit.character;
-    const { health } = unit.character;
+    // Метод возвращает строку для сообщения о параметрах unit.
+    const {
+      level,
+      attack,
+      defence,
+      health,
+    } = unit.character;
     return `\u{1F396} ${level} \u{2694} ${attack} \u{1F6E1} ${defence} \u{2764} ${health}`;
   }
 
@@ -310,15 +283,17 @@ export default class GameController {
     let target = arrayTeams.find((item) => item.position === index);
     const indexTarget = arrayTeams.indexOf(target);
     target = target.character;
+
     let damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
     damage = Number(damage.toFixed(1));
-    const result = this.gamePlay.showDamage(index, damage);
-    this.gameState.animation = true;
+
     const { health } = arrayTeams[indexTarget].character;
     const newArrayTeam = [...arrayTeams];
     newArrayTeam[indexTarget].character.health = Number((health - damage).toFixed(1));
     const { lostIndex } = this.gameState;
 
+    this.gameState.animation = true;
+    const result = this.gamePlay.showDamage(index, damage);
     result.then(() => {
       this.gamePlay.redrawPositions(arrayTeams);
       this.gameState.animation = false;
@@ -339,115 +314,15 @@ export default class GameController {
         }
       }
 
-      if (this.gameState.stepUser) {
-        this.gameState.stepUser = false;
-      } else {
-        this.gameState.stepUser = true;
-      }
+      this.gameState.stepUser = !this.gameState.stepUser;
 
       if (!this.gameState.stepUser) {
         this.stepComputer();
       }
     });
-    this.gameState.lostIndex = -1;
-    this.gameState.unitAssign = false;
-    this.gameState.point = { X: null, Y: null };
-    this.gameState.step = undefined;
-    this.gameState.stepAttack = undefined;
-    this.gamePlay.setCursor(cursors.auto);
+    this.zeroParams();
     this.gamePlay.deselectCell(lostIndex);
     this.gamePlay.deselectCell(index);
-  }
-
-  nextLevel() {
-    this.gameState.stepUser = true;
-    this.upgradeUnits();
-    this.gameState.playerVictory = true;
-    let { level } = this.gameState;
-    this.gameState.level += 1;
-    level += 1;
-    return level;
-  }
-
-  stepResolution(unit, cordsComputer) {
-    let result = true;
-    const metric = this.countDistance(cordsComputer);
-    console.log('metric', metric)
-    const cordsTarget = getСoordinates(metric.position, this.gameState.matrix);
-    console.log('cordsTarget', cordsTarget)
-    const step = countStep(metric, unit);
-    console.log('step', step)
-    const { x, y } = this.getCordsMove(cordsComputer, cordsTarget, step);
-    const index = this.gameState.matrix[x][y];
-    if (metric.distance > 0) {
-      this.gameState.enemies.forEach((item) => {
-        if (item.position === index) {
-          console.log('item.position', item.position, 'index', index);
-          result = false;
-        }
-      });
-    }
-    console.log(result)
-    return result;
-  }
-
-  stepComputer() {
-    if (this.gameState.enemies.length === 0) {
-      const listThemes = Object.values(themes);
-      const level = this.nextLevel();
-      if (Number.isInteger((level - 1) / listThemes.length)) {
-        this.gameState.countThemes += 1;
-      }
-      this.init();
-      return;
-    }
-
-    const listUnit = this.inviteUnits();
-    let unit, cordsComputer;
-    for (let i = 0; i < this.gameState.enemies.length; i += 1) {
-      unit = listUnit[i];
-      cordsComputer = getСoordinates(unit.position, this.gameState.matrix);
-      this.onCellClick(unit.position);
-      if (this.stepResolution(unit, cordsComputer)) {
-        break;
-      }
-    }
-
-    const metric = this.countDistance(cordsComputer);
-    const cordsTarget = getСoordinates(metric.position, this.gameState.matrix);
-
-    if (metric.distance <= 0) {
-      // атакуем врага в зоне поражения (если такой имеется)
-      this.onCellClick(this.gameState.matrix[cordsTarget.X][cordsTarget.Y]);
-      return;
-    }
-
-    const step = countStep(metric, unit);
-    const { x, y } = this.getCordsMove(cordsComputer, cordsTarget, step);
-    this.onCellClick(this.gameState.matrix[x][y]);
-  }
-
-  upgradeUnits() {
-    // Метод повышает уровень и показатели персонажей команды игрока
-    for (let i = 0; i < this.gameState.players.length; i += 1) {
-      const obj = this.gameState.players[i];
-      Character.levelUp.call(obj.character, 1);
-    }
-    this.gamePlay.redrawPositions(this.gameState.players);
-  }
-
-  inviteUnits() {
-    // Метод выбирает unit по рангу классов и уровню персонажей.
-    const rangTypes = ['undead', 'vampire', 'daemon'];
-    const listUnits = [];
-    const { enemies } = this.gameState;
-
-    for (let title of rangTypes) {
-      const newList = enemies.filter((item) => item.character.type === title);
-      newList.sort(compareLevel);
-      listUnits.push(...newList);
-    }
-    return listUnits;
   }
 
   countDistance(cordsComputer) {
@@ -534,5 +409,143 @@ export default class GameController {
     x = (x < 0) ? 0 : x;
     y = (y < 0) ? 0 : y;
     return { x, y };
+  }
+
+  reloadScore() {
+    // Метод перезаписывает лучший результат в localstorage.
+    let data;
+    try {
+      data = this.stateService.load();
+    } catch (error) {
+      GamePlay.showError(error.message);
+    }
+    if (data) {
+      if (this.gameState.maxScore > data.maxScore) {
+        data.maxScore = this.gameState.maxScore;
+        this.stateService.save(data);
+      }
+    }
+  }
+
+  nextLevel() {
+    this.gameState.stepUser = true;
+    this.upgradeUnits();
+    this.gameState.playerVictory = true;
+    let { level } = this.gameState;
+    this.gameState.level += 1;
+    level += 1;
+    return level;
+  }
+
+  moveUnit(index, arrayTeams) {
+    // Метод отрисовывает движение unit и обнуляет переменные.
+    const findUnit = arrayTeams.find((item) => item.position === this.gameState.lostIndex);
+    const indexUnit = arrayTeams.indexOf(findUnit);
+    const newArrayr = [...arrayTeams];
+    newArrayr[indexUnit].position = index;
+
+    this.gamePlay.redrawPositions(arrayTeams);
+    this.gamePlay.deselectCell(this.gameState.lostIndex);
+    this.gamePlay.deselectCell(index);
+    this.zeroParams();
+    this.gameState.stepUser = !this.gameState.stepUser;
+  }
+
+  setListeners() {
+    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+    this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
+    this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
+    this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+    this.gameState.addListener = false;
+  }
+
+  stepComputer() {
+    if (this.gameState.enemies.length === 0) {
+      const listThemes = Object.values(themes);
+      const level = this.nextLevel();
+      if (Number.isInteger((level - 1) / listThemes.length)) {
+        this.gameState.countThemes += 1;
+      }
+      this.init();
+      return;
+    }
+
+    const listUnit = this.sortUnits();
+    let unit;
+    let cordsComputer;
+    for (let i = 0; i < this.gameState.enemies.length; i += 1) {
+      unit = listUnit[i];
+      cordsComputer = getСoordinates(unit.position, this.gameState.matrix);
+      this.onCellClick(unit.position);
+      if (this.stepResolution(unit, cordsComputer)) {
+        break;
+      }
+    }
+
+    const metric = this.countDistance(cordsComputer);
+    const cordsTarget = getСoordinates(metric.position, this.gameState.matrix);
+
+    if (metric.distance <= 0) {
+      // атакуем врага в зоне поражения (если такой имеется)
+      this.onCellClick(this.gameState.matrix[cordsTarget.X][cordsTarget.Y]);
+      return;
+    }
+
+    const step = countStep(metric, unit);
+    const { x, y } = this.getCordsMove(cordsComputer, cordsTarget, step);
+    this.onCellClick(this.gameState.matrix[x][y]);
+  }
+
+  stepResolution(unit, cordsComputer) {
+    let result = true;
+    const metric = this.countDistance(cordsComputer);
+    const cordsTarget = getСoordinates(metric.position, this.gameState.matrix);
+    const step = countStep(metric, unit);
+    const { x, y } = this.getCordsMove(cordsComputer, cordsTarget, step);
+    const index = this.gameState.matrix[x][y];
+    if (metric.distance > 0) {
+      this.gameState.enemies.forEach((item) => {
+        if (item.position === index) {
+          result = false;
+        }
+      });
+    }
+    return result;
+  }
+
+  sortUnits() {
+    // Метод сортирует units по рангу классов и уровню персонажей.
+    // Возвращает отсортированный список.
+    const rangTypes = ['undead', 'vampire', 'daemon'];
+    const listUnits = [];
+    const { enemies } = this.gameState;
+
+    for (const title of rangTypes) {
+      const newList = enemies.filter((item) => item.character.type === title);
+      newList.sort(compareLevel);
+      listUnits.push(...newList);
+    }
+    return listUnits;
+  }
+
+  upgradeUnits() {
+    // Метод повышает уровень и показатели персонажей команды игрока
+    for (let i = 0; i < this.gameState.players.length; i += 1) {
+      const obj = this.gameState.players[i];
+      obj.character.levelUp(1);
+    }
+    this.gamePlay.redrawPositions(this.gameState.players);
+  }
+
+  zeroParams() {
+    // Метод обнуляет переменные по ранее выбранной цели.
+    this.gamePlay.setCursor(cursors.auto);
+    this.gameState.unitAssign = false;
+    this.gameState.lostIndex = -1;
+    this.gameState.point = { X: null, Y: null };
+    this.gameState.step = undefined;
+    this.gameState.stepAttack = undefined;
   }
 }

@@ -25,7 +25,7 @@ export default class Character {
     }
   }
 
-  static levelUp(level = null) {
+  levelUp(level = null) {
     this.level += level;
     let attack = Math.max(this.attack, (this.attack * (80 + this.health)) / 100);
     attack = Math.round(attack);

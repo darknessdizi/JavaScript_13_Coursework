@@ -1,5 +1,7 @@
 # Дипломное задание к курсу «Продвинутый JavaScript». Retro Game
 
+Ссылка на страницу с игрой: https://darknessdizi.github.io/JavaScript_13_Coursework/
+
 ###### tags: `netology` `advanced js`
 
 ## Предыстория

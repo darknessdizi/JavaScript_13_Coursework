@@ -186,10 +186,8 @@ export default class GameController {
     const arrayTeams = [...this.gameState.players, ...this.gameState.enemies];
     const unit = arrayTeams.find((item) => item.position === index);
     if (this.gameState.unitAssign) {
-      if (unit) {
-        if (index === this.gameState.lostIndex) {
-          return;
-        }
+      if ((unit) && (index === this.gameState.lostIndex)) {
+        return;
       }
       this.gamePlay.deselectCell(index);
     }
